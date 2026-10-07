@@ -80,7 +80,7 @@
       </sc-if>
       <p style="margin:0;font-size:19px;line-height:1.6;color:#EFE7DB;text-wrap:pretty;">Dinner and the film are included with every seat.</p>
         <div style="display:flex;flex-direction:column;gap:14px;">
-        <a href="#tickets" style="display:inline-flex;align-self:flex-start;align-items:center;justify-content:center;min-height:56px;padding:16px 30px;background:#C8A45C;color:#15120E;font-family:'Cinzel',serif;font-weight:700;font-size:15px;letter-spacing:.16em;text-transform:uppercase;border-radius:2px;" style-hover="background:#E3C179;">Get your seat · from $150</a>
+        <a href="https://app.ticket-punch.com/event/dune-part-three-premiere" target="_blank" rel="noopener" style="display:inline-flex;align-self:flex-start;align-items:center;justify-content:center;min-height:56px;padding:16px 30px;background:#C8A45C;color:#15120E;font-family:'Cinzel',serif;font-weight:700;font-size:15px;letter-spacing:.16em;text-transform:uppercase;border-radius:2px;" style-hover="background:#E3C179;">Get your seat · from $150</a>
         <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:16px;color:#B6AA98;">
           <span>Doors 4:00 PM VIP · 5:00 PM Standard</span>
           <span style="color:#948A7E;">·</span>
@@ -410,7 +410,7 @@
         <span style="font-family:'Archivo',sans-serif;font-weight:500;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#F4EEE4;white-space:nowrap;">December 17</span>
         <span style="font-size:14px;color:#AEA294;white-space:nowrap;">Seats $150 or $300</span>
       </div>
-      <a href="#tickets" style="display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:14px 22px;background:#C8A45C;color:#15120E;font-family:'Cinzel',serif;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;" style-hover="background:#E3C179;">Get your seat</a>
+      <a href="https://app.ticket-punch.com/event/dune-part-three-premiere" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:14px 22px;background:#C8A45C;color:#15120E;font-family:'Cinzel',serif;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;" style-hover="background:#E3C179;">Get your seat</a>
     </div>
   </sc-if>
 
@@ -513,8 +513,8 @@ class Component extends DCLogic {
       openSlots: openSlots,
       showBar: this.state.showBar,
 
-      selectStandard: () => !this.props.standardSoldOut && this.setState({ selectedTier: 'Standard seat' }),
-      selectVip: () => !this.props.vipSoldOut && this.setState({ selectedTier: 'VIP seat' }),
+      selectStandard: () => !this.props.standardSoldOut && window.open('https://app.ticket-punch.com/event/dune-part-three-premiere', '_blank', 'noopener'),
+      selectVip: () => !this.props.vipSoldOut && window.open('https://app.ticket-punch.com/event/dune-part-three-premiere', '_blank', 'noopener'),
       clearSelection: () => this.setState({ selectedTier: null, raffle: 0 }),
       selectedTier: this.state.selectedTier,
 
