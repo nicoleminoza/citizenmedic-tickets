@@ -113,6 +113,33 @@
     </div>
   </section>
 
+  <!-- 2024 FILM: click-to-load, no autoplay until the guest presses play -->
+  <section style="padding:clamp(48px,6vw,72px) clamp(26px,4vw,52px);background:#100D0A;">
+    <figure style="margin:0 auto;max-width:940px;display:flex;flex-direction:column;gap:16px;">
+      <div style="position:relative;aspect-ratio:16/9;background:#15120E;border:1px solid #332C24;overflow:hidden;">
+        <sc-if value="{{ videoOff }}" hint-placeholder-val="{{ true }}">
+          <button type="button" onClick="{{ playVideo }}" aria-label="Play the First Light 2024 film" style="position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;cursor:pointer;background:#15120E;display:block;" style-focus="outline:2px solid #C8A45C;outline-offset:-2px;">
+            <img src="https://i.ytimg.com/vi/1gii_Ys80KY/maxresdefault.jpg" alt="" style="width:100%;height:100%;object-fit:cover;display:block;opacity:.82;">
+            <span style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,13,10,0) 45%,rgba(16,13,10,.7) 100%);"></span>
+            <span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:16px;">
+              <span style="width:88px;height:88px;border-radius:50%;border:1px solid #F4EEE4;background:rgba(16,13,10,.35);display:flex;align-items:center;justify-content:center;transition:border-color .2s,background .2s;" style-hover="border-color:#C8A45C;background:rgba(16,13,10,.55);">
+                <span style="width:0;height:0;margin-left:5px;border-style:solid;border-width:11px 0 11px 18px;border-color:transparent transparent transparent #F4EEE4;"></span>
+              </span>
+              <span style="font-family:'Archivo',sans-serif;font-weight:600;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#F4EEE4;text-shadow:0 1px 8px rgba(0,0,0,.6);">Watch the night</span>
+            </span>
+          </button>
+        </sc-if>
+        <sc-if value="{{ videoOn }}" hint-placeholder-val="{{ false }}">
+          <iframe src="https://www.youtube-nocookie.com/embed/1gii_Ys80KY?autoplay=1&amp;rel=0&amp;modestbranding=1&amp;playsinline=1" title="First Light 2024, Dune: Part Two premiere" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen="" style="position:absolute;inset:0;width:100%;height:100%;border:0;display:block;"></iframe>
+        </sc-if>
+      </div>
+      <figcaption style="display:flex;flex-direction:column;gap:6px;">
+        <span style="font-family:'Archivo',sans-serif;font-weight:600;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#C8A45C;">First Light 2024 · Dune: Part Two</span>
+        <span style="font-size:18px;color:#B6AA98;">Our last Dune premiere.</span>
+      </figcaption>
+    </figure>
+  </section>
+
   <!-- WHAT THE NIGHT INCLUDES -->
   <section style="padding:56px clamp(26px,4vw,52px);background:#15120E;">
     <div style="max-width:940px;margin:0 auto;display:flex;flex-direction:column;gap:20px;">
@@ -510,6 +537,9 @@ class Component extends DCLogic {
     if (midNames.length < 4) openSlots.push({ label: midTierName });
 
     return {
+      videoOn: !!this.state.videoOn,
+      videoOff: !this.state.videoOn,
+      playVideo: () => this.setState({ videoOn: true }),
       countdownLabel: earlyOpen ? 'Early access closes in' : 'The night begins in',
       earlyOpen: earlyOpen,
       publicOpen: !earlyOpen,
