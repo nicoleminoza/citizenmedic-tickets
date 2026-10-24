@@ -264,6 +264,7 @@
             <h3 style="margin:0;font-family:'Cinzel',serif;font-weight:700;font-size:19px;letter-spacing:.1em;text-transform:uppercase;color:#F4EEE4;">VIP seat</h3>
             <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;">
               <span style="font-family:'Cinzel',serif;font-size:30px;color:#E3C179;">$300</span>
+              <sc-if value="{{ vipShowCount }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Archivo',sans-serif;font-weight:500;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#C8A45C;">{{ vipCountLabel }}</span></sc-if>
             </div>
             <p style="margin:0;font-size:16px;line-height:1.55;color:#C4B9A6;">{{ vipFraming }}</p>
           </div>
@@ -285,6 +286,7 @@
             <h3 style="margin:0;font-family:'Cinzel',serif;font-weight:700;font-size:19px;letter-spacing:.1em;text-transform:uppercase;color:#F4EEE4;">Standard seat</h3>
             <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;">
               <span style="font-family:'Cinzel',serif;font-size:30px;color:#E3C179;">$150</span>
+              <sc-if value="{{ stdShowCount }}" hint-placeholder-val="{{ false }}"><span style="font-family:'Archivo',sans-serif;font-weight:500;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#C8A45C;">{{ stdCountLabel }}</span></sc-if>
             </div>
           </div>
           <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:17px;color:#C4B9A6;">
@@ -480,7 +482,7 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;earlyAccessCutoff&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Dates &amp; states&quot;},&quot;seatsLeft&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:150,&quot;min&quot;:0,&quot;max&quot;:150,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Dates &amp; states&quot;},&quot;standardSoldOut&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Dates &amp; states&quot;},&quot;vipSoldOut&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Dates &amp; states&quot;},&quot;topTierName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Presenting Sponsor&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Sponsors&quot;},&quot;midTierName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Supporting Sponsor&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Sponsors&quot;},&quot;topSponsorName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Sponsors&quot;},&quot;midSponsorNames&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Sponsors&quot;}}">
 class Component extends DCLogic {
-  state = { now: Date.now(), selectedTier: null, raffle: 0, showBar: false };
+  state = { now: Date.now(), selectedTier: null, raffle: 0, showBar: false, liveVip: null, liveStd: null };
 
   componentDidMount() {
     this.t = setInterval(() => this.setState({ now: Date.now() }), 1000);
@@ -490,9 +492,30 @@ class Component extends DCLogic {
     };
     window.addEventListener('scroll', this.onScroll, { passive: true });
     this.onScroll();
+    this.pollSeats();
+    this.seatTimer = setInterval(() => this.pollSeats(), 60000);
   }
+  pollSeats() {
+    fetch('https://app.ticket-punch.com/api/events/dune-part-three-premiere/availability', { cache: 'no-store' }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(d => {
+      let vip = null, std = null;
+      if (d && d.types) {
+        Object.values(d.types).forEach(t => {
+          const n = String(t && t.name || '').trim().toLowerCase();
+          if (n === 'vip') vip = t.remaining;
+          else if (n === 'standard') std = t.remaining;
+        });
+      } else if (d) { vip = d.vip ?? null; std = d.standard ?? null; }
+      this.setState({ liveVip: vip, liveStd: std });
+    }).catch(() => {});
+  }
+  seatNum(v) {
+    if (v == null || v === '' || isNaN(Number(v))) return null;
+    return Math.max(0, Math.floor(Number(v)));
+  }
+  seatLabel(n) { return n === 1 ? '1 seat left' : n + ' seats left'; }
   componentWillUnmount() {
     clearInterval(this.t);
+    clearInterval(this.seatTimer);
     window.removeEventListener('scroll', this.onScroll);
   }
 
@@ -517,7 +540,10 @@ class Component extends DCLogic {
     const secs = Math.floor(ms / 1000);
     const p = n => String(n).padStart(2, '0');
 
-    const left = this.props.seatsLeft;
+    const left = this.seatNum(this.state.liveVip);
+    const stdLeft = this.seatNum(this.state.liveStd);
+    const vipOut = !!this.props.vipSoldOut || left === 0;
+    const stdOut = !!this.props.standardSoldOut || stdLeft === 0;
     const vipState = earlyOpen ? 'early' : (left != null && left <= 12 ? 'last' : 'standard');
     const vipCopy = {
       early: { flag: 'Early access', framing: 'Open before this page goes public. These go first, and they went first the last two years.', cta: 'Claim early access' },
@@ -548,22 +574,26 @@ class Component extends DCLogic {
       cdDays: p(days), cdHours: p(hours), cdMins: p(mins), cdSecs: p(secs),
       cdFine: days < 7,
 
-      standardSoldOut: !!this.props.standardSoldOut,
-      allSoldOut: !!this.props.standardSoldOut && !!this.props.vipSoldOut,
-      vipSoldOut: !!this.props.vipSoldOut,
-      standardCta: this.props.standardSoldOut ? 'Sold out' : 'Choose Standard',
+      standardSoldOut: stdOut,
+      allSoldOut: stdOut && vipOut,
+      vipSoldOut: vipOut,
+      vipShowCount: left != null && left > 0,
+      vipCountLabel: left != null ? this.seatLabel(left) : '',
+      stdShowCount: stdLeft != null && stdLeft > 0,
+      stdCountLabel: stdLeft != null ? this.seatLabel(stdLeft) : '',
+      standardCta: stdOut ? 'Sold out' : 'Choose Standard',
       vipFlag: vipCopy.flag,
       vipHasFlag: !!vipCopy.flag,
       vipFraming: vipCopy.framing,
-      vipCta: this.props.vipSoldOut ? 'Sold out' : vipCopy.cta,
+      vipCta: vipOut ? 'Sold out' : vipCopy.cta,
 
       topTierName: topTierName,
       midTierName: midTierName,
       openSlots: openSlots,
       showBar: this.state.showBar,
 
-      selectStandard: () => !this.props.standardSoldOut && window.open('https://app.ticket-punch.com/event/dune-part-three-premiere', '_blank', 'noopener'),
-      selectVip: () => !this.props.vipSoldOut && window.open('https://app.ticket-punch.com/event/dune-part-three-premiere', '_blank', 'noopener'),
+      selectStandard: () => !stdOut && window.open('https://app.ticket-punch.com/event/dune-part-three-premiere', '_blank', 'noopener'),
+      selectVip: () => !vipOut && window.open('https://app.ticket-punch.com/event/dune-part-three-premiere', '_blank', 'noopener'),
       clearSelection: () => this.setState({ selectedTier: null, raffle: 0 }),
       selectedTier: this.state.selectedTier,
 
